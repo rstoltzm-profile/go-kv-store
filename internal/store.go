@@ -4,16 +4,24 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
-func PutKeyValue(fullFilePath, key, value string) {
+func PutKeyValue(fullFilePath, key, value string) error {
+	dir := filepath.Dir(fullFilePath)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return fmt.Errorf("directory does not exist: %s", dir)
+	}
+
 	// Read existing content
 	kvMap := make(map[string]string)
 
 	if _, err := os.Stat(fullFilePath); err == nil {
 		file, err := os.Open(fullFilePath)
-		check(err)
+		if err != nil {
+			return err
+		}
 		defer file.Close()
 
 		scanner := bufio.NewScanner(file)
@@ -38,6 +46,7 @@ func PutKeyValue(fullFilePath, key, value string) {
 		_, err := file.WriteString(fmt.Sprintf("%s=%s\n", k, v))
 		check(err)
 	}
+	return nil
 }
 
 func GetKeyValue(fullFilePath, key string) (string, bool) {
